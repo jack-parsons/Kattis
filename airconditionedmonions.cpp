@@ -4,7 +4,6 @@
 #include <vector>
 #include <algorithm>
 #include <istream>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 
@@ -18,24 +17,48 @@ typedef vector<int> VI;
 
 const ll inf = 1e9+7;
 
-bool check(int temp, pair<int,int> range){
-    //cout << "Lower: "<<range.first << " Upper: " << range.second << " Temp: " << temp << endl;
-    if(temp >= range.first && temp < range.second){
-        return true;
-    }
-    return false;
+struct minion {
+    int upper, lower, covered;
+};
 
+bool comp(minion i, minion j) {
+    return i.upper > j.upper;
+}
+
+int helper(int t, vector<minion>& minions, int minionIndex) {
+    int minimumNeeded = inf;
+    int newT = minions[minionIndex].lower;
+    bool found = false;
+    for (int i = minionIndex+1; i < minions.size(); i++) {
+        minion m = minions[i];
+        if (t>=m.lower && m.upper>=newT) {
+            // minions[i].covered = true;
+            found = true;
+            minimumNeeded = min(minimumNeeded, helper(minions[i].upper, minions, i));
+        }
+    }
+    if (found)
+        return minimumNeeded+1;
+    else {
+        if (minionIndex > 0) {
+            return helper(minions[minionIndex-1].upper, minions, minionIndex-1);
+        } else {
+            return 1;
+        }
+    }
+        
 }
 
 int main(){
     int N;
     cin >> N;
-    vector<pair<int,int>> ranges(N);
-    int maximum = 0;
+    vector<minion> minions(N);
     for(int i = 0 ; i < N; i++){
-        int l;
-        int u;
-        cin >> l >> u;
-        maximum = max(maximum, u);
-        ranges[i] = {l,u};
+        cin >> minions[i].lower >> minions[i].upper;
+        minions[i].covered = false;
     }
+
+    sort(minions.begin(), minions.end(), comp);
+
+    cout << helper(minions[0].upper, minions, 0);
+}
